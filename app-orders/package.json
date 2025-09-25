@@ -1,0 +1,31 @@
+{
+  "name": "app-orders",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --experimental-strip-types --watch --no-warnings src/http/server.ts",
+    "start": "node --experimental-strip-types --no-warnings src/http/server.ts",
+    "db:migrate": "drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "drizzle-orm": "^0.44.5",
+    "fastify": "^5.6.1",
+    "fastify-type-provider-zod": "^6.0.0",
+    "pg": "^8.16.3",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.2",
+    "@types/node": "^24.5.2",
+    "drizzle-kit": "^0.31.4",
+    "gitmoji-cli": "^9.7.0",
+    "typescript": "^5.9.2"
+  }
+}
