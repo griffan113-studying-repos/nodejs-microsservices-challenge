@@ -1,0 +1,6 @@
+dist
+*.js
+*.cjs
+*.mjs
+node_modules
+dist
