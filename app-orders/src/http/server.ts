@@ -1,3 +1,7 @@
+import "@opentelemetry/auto-instrumentations-node/register"
+
+import { trace } from "@opentelemetry/api"
+
 import { fastify } from "fastify"
 import { z } from "zod"
 import {
@@ -10,6 +14,9 @@ import { db } from "../db/client.ts"
 import { schema } from "../db/schema/index.ts"
 import { randomUUID } from "node:crypto"
 import { displayOrderCreated } from "../broker/messages/order-created.ts"
+
+import { setTimeout } from "node:timers/promises"
+import { tracer } from "../tracing/tracer.ts"
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -43,8 +50,6 @@ app.post(
 
     const orderId = randomUUID()
 
-    displayOrderCreated({ orderId, amount, customer: { id: customerId } })
-
     try {
       await db.insert(schema.orders).values({
         id: orderId,
@@ -54,6 +59,16 @@ app.post(
     } catch (error) {
       console.error(error)
     }
+
+    const span = tracer.startSpan("Simulate a long task")
+
+    await setTimeout(2000)
+
+    span.end()
+
+    trace.getActiveSpan()?.setAttribute("order_id", orderId)
+
+    displayOrderCreated({ orderId, amount, customer: { id: customerId } })
 
     return reply.status(201).send()
   }

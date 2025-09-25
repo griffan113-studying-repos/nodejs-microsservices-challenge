@@ -25,6 +25,9 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@opentelemetry/auto-instrumentations-node": "^0.64.1",
+    "@opentelemetry/sdk-node": "^0.205.0",
+    "@opentelemetry/sdk-trace-node": "^2.1.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/amqplib": "^0.10.7",
     "@types/node": "^24.5.2",

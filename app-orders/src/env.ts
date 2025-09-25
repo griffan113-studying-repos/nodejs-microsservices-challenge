@@ -7,6 +7,7 @@ export const env = createEnv({
       .url()
       .default("postgresql://docker:docker@localhost:5482/orders"),
     BROKER_URL: z.url().default("amqp://localhost:5672"),
+    OTEL_SERVICE_NAME: z.string().default("orders"),
   },
 
   /**
