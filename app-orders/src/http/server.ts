@@ -5,11 +5,11 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from "fastify-type-provider-zod"
-import { channels } from "../broker/channels/index.ts"
 import fastifyCors from "@fastify/cors"
 import { db } from "../db/client.ts"
 import { schema } from "../db/schema/index.ts"
 import { randomUUID } from "node:crypto"
+import { displayOrderCreated } from "../broker/messages/order-created.ts"
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -41,11 +41,13 @@ app.post(
 
     console.log(`[Orders] New order received for amount: ${amount}`)
 
-    channels.orders.sendToQueue("orders", Buffer.from("Hello World"))
+    const orderId = randomUUID()
+
+    displayOrderCreated({ orderId, amount, customer: { id: customerId } })
 
     try {
       await db.insert(schema.orders).values({
-        id: randomUUID(),
+        id: orderId,
         amount,
         customerId,
       })
