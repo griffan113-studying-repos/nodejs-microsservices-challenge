@@ -2,8 +2,12 @@ import * as awsx from "@pulumi/awsx"
 import * as pulumi from "@pulumi/pulumi"
 
 import { cluster } from "../ecs/cluster"
-import { appLoadBalancer } from "../app-load-balancer/load-balancer"
+import {
+  appLoadBalancer,
+  networkLoadBalancer,
+} from "../app-load-balancer/load-balancer"
 
+// Target Group é um grupo de destinos (containers) que receberão o tráfego do load balancer
 export const rabbitMQAdminTargetGroup = appLoadBalancer.createTargetGroup(
   "rmq-admin-target-group",
   {
@@ -16,12 +20,35 @@ export const rabbitMQAdminTargetGroup = appLoadBalancer.createTargetGroup(
   }
 )
 
+// Listener é responsável por escutar as requisições na porta 15672 e direcioná-las para o target group
 export const rabbitMQAdminHttpListener = appLoadBalancer.createListener(
   "rmq-admin-http-listener",
   {
     port: 15672,
     protocol: "HTTP",
     targetGroup: rabbitMQAdminTargetGroup,
+  }
+)
+
+export const amqpTargetGroup = networkLoadBalancer.createTargetGroup(
+  "amqp-target-group",
+  {
+    protocol: "TCP",
+    port: 5672,
+    targetType: "ip",
+    healthCheck: {
+      port: "5672",
+      protocol: "TCP",
+    },
+  }
+)
+
+export const amqpListener = networkLoadBalancer.createListener(
+  "amqp-listener",
+  {
+    port: 5672,
+    protocol: "TCP",
+    targetGroup: amqpTargetGroup,
   }
 )
 
@@ -41,7 +68,7 @@ export const rabbitMQService = new awsx.classic.ecs.FargateService("rabbitmq", {
           value: "admin" /* pulumi.secret('rabbitmq_password') */,
         },
       ],
-      portMappings: [rabbitMQAdminTargetGroup],
+      portMappings: [rabbitMQAdminHttpListener, amqpListener],
     },
   },
 })

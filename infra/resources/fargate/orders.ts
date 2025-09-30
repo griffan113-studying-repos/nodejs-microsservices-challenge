@@ -4,7 +4,7 @@ import * as awsx from "@pulumi/awsx"
 
 import { authToken, ordersECRRepository } from "../ecr/orders"
 import { cluster } from "../ecs/cluster"
-import { rabbitMQAdminHttpListener } from "./rabbitmq"
+import { amqpListener } from "./rabbitmq"
 
 export const ordersDockerImage = new docker.Image("orders-image", {
   imageName: pulumi.interpolate`${ordersECRRepository.url}:latest`,
@@ -34,13 +34,38 @@ export const ordersService = new awsx.classic.ecs.FargateService(
         environment: [
           {
             name: "BROKER_URL",
-            value: pulumi.interpolate`amqp://${rabbitMQAdminHttpListener.endpoint.hostname}:${rabbitMQAdminHttpListener.endpoint.port}`
+            value: pulumi.interpolate`amqp://${amqpListener.endpoint.hostname}:${amqpListener.endpoint.port}`,
           },
           {
             name: "DATABASE_URL",
-            value: pulumi.secret("orders_database_url")
-          }
-        ]
+            value: pulumi.secret("orders_database_url"),
+          },
+          {
+            name: "OTEL_SERVICE_NAME",
+            value: "orders",
+          },
+          {
+            name: "OTEL_TRACES_EXPORTER",
+            value: "otlp",
+          },
+          {
+            name: "OTEL_EXPORTER_OTLP_ENDPOINT",
+            value: "https://otlp-gateway-prod-us-east-2.grafana.net/otlp",
+          },
+          {
+            name: "OTEL_EXPORTER_OTLP_HEADERS",
+            value: pulumi.secret("orders_grafana_headers"),
+          },
+          {
+            name: "OTEL_RESOURCE_ATTRIBUTES",
+            value:
+              "service.name=orders,service.namespace=nodejsmicrosservices,deployment.environment=production",
+          },
+          {
+            name: "OTEL_NODE_RESOURCE_DETECTORS",
+            value: "env,host,os",
+          },
+        ],
       },
     },
   }
