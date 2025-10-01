@@ -1,0 +1,36 @@
+name: (Orders) Run Migrations
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app-orders/**"
+    branches:
+      - main
+
+jobs:
+  orders-run-migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: ./app-orders
+        run: npm ci
+
+      - name: "Create env file"
+        working-directory: ./app-orders
+        run: |
+          touch .env
+          echo DATABASE_URL="${{secrets.ORDERS_DATABASE_URL}}" >> .env
+          cat .env
+
+      - name: Run migrations
+        working-directory: ./app-orders
+        run: npm run db:migrate
